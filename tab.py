@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QGridLayout, QGroupBox, QPushButton, QFileDialog, QL
 import pandas as pd
 import numpy as np
 from math import *
+import os
 
 class TabWindow(QDialog):
     def __init__(self, parent=None, funcName = None, valName = None, func = None):
@@ -16,10 +17,12 @@ class TabWindow(QDialog):
         self.upper = None
         self.func = func
         self.h = 0
+        self.setMinimumWidth(310)
+        self.minimized = True
         self.initUI()
 
     def initUI(self):
-        lfunc = QLabel(self.funcName + ' = ' + self.func)
+        lfunc = QLabel('Функция: ' + self.funcName + ' = ' + self.func)
         self.buttonT = QPushButton('Табулировать')
         self.buttonT.clicked.connect(self.tab)
         self.buttonT.setEnabled(False)
@@ -32,10 +35,10 @@ class TabWindow(QDialog):
 
         self.setLayout(grid)
         self.setWindowTitle(self.title)
-        self.setFixedSize(self.width, self.height)
+        #self.setFixedSize(self.width, self.height)
 
     def buttonClick(self):
-        name = str(QFileDialog.getExistingDirectory(self))
+        name = str(QFileDialog.getExistingDirectory(self, directory = './data'))
         if name:
             self.Dir.setText(name + '/')
             print(self.Dir.text())
@@ -45,7 +48,7 @@ class TabWindow(QDialog):
 
         grid = QGridLayout()
 
-        self.Dir = QLineEdit('./')
+        self.Dir = QLineEdit(os.getcwd() + '/data/')
         self.Dir.setReadOnly(True)
         DirButton = QPushButton('...')
         DirButton.clicked.connect(self.buttonClick)
@@ -67,16 +70,16 @@ class TabWindow(QDialog):
         
         l = QLabel(self.valName + '   =    [')
         l1 = QLabel(', ')
-        l2 = QLabel(')')
+        l2 = QLabel(']')
         l3 = QLabel('N : ')
         self.leLower = QLineEdit()
-        self.leLower.setMinimumWidth(50)
+        #self.leLower.setMinimumWidth(50)
         self.leUpper = QLineEdit()
-        self.leUpper.setMinimumWidth(50)
+        #self.leUpper.setMinimumWidth(50)
         self.leH = QLineEdit()
         buttonS = QPushButton('Сохранить')
         buttonS.clicked.connect(self.save)
-        buttonS.setMinimumWidth(240)
+        #buttonS.setMinimumWidth(240)
 
         grid = QGridLayout()
         
@@ -87,7 +90,7 @@ class TabWindow(QDialog):
         grid.addWidget(l2, 0, 4)
         grid.addWidget(l3, 1, 0)
         grid.addWidget(self.leH, 1, 1)
-        grid.addWidget(buttonS, 2, 0)
+        grid.addWidget(buttonS, 2, 0, 1, -1)
 
         groupBox.setLayout(grid)
         return groupBox
@@ -102,17 +105,17 @@ class TabWindow(QDialog):
 
     def save(self):
         try:
-            self.lower = np.float64(self.leLower.text())
-            self.upper = np.float64(self.leUpper.text())
+            self.lower = float(self.leLower.text())
+            self.upper = float(self.leUpper.text())
             if (self.lower > self.upper):
                 raise RuntimeError()
-            self.n = np.float64(self.leH.text()) - 1
+            self.n = float(self.leH.text()) - 1
             if (self.n <= 0):
                 raise NameError()
             self.showMessageBox('Успешно', 'Значения сохранены.')
             self.buttonT.setEnabled(True)
         except ValueError:
-            showMessageBox('Ошибка', 'Неправильный тип данных параметров. \n Допустимый тип:  float.')
+            self.showMessageBox('Ошибка', 'Неправильный тип данных параметров. \n Допустимый тип:  float.')
             self.leLower.setText('')
             self.leUpper.setText('')
             self.buttonT.setEnabled(False)
@@ -128,6 +131,9 @@ class TabWindow(QDialog):
             self.buttonT.setEnabled(False)
 
     def tab(self):
+        if (len(set(self.name.text()) & set('\/:*?"<>|+')) != 0 ):
+            self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
+            return
         h = (self.upper - self.lower) / self.n
         print(h)
         if (self.funcName == 'p(w)'):

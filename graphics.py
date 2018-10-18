@@ -27,7 +27,7 @@ class GraphicsWindow(QDialog):
         self.setLayout(layout)
         self.plot()
         self.setWindowTitle('Графики')
-        self.setFixedSize(800, 800)
+    #self.setFixedSize(800, 800)
 
     def plot(self):
         data = [random.random() for i in range(10)]

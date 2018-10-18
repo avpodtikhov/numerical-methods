@@ -8,14 +8,14 @@ import koshi
 import interpolation
 import difeq
 from functools import partial
-
+import os
 
 class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
         self.title = 'Программа'
-        self.width = 500
-        self.height = 390
+        self.width = 520
+        self.height = 430
         self.IntWindow = None
         self.KoshiWindow = None
         self.InterpolWindow = None
@@ -23,6 +23,7 @@ class Window(QWidget):
         self.FuncWindow = None
         self.mode = 0
         self.f = ''
+        os.makedirs('./data', exist_ok=True)
         self.initUI()
 
     def initUI(self):
@@ -34,7 +35,7 @@ class Window(QWidget):
 
         self.setLayout(grid)
         self.setWindowTitle(self.title)
-        self.setFixedSize(self.width, self.height)
+    #self.setFixedSize(self.width, self.height)
 
     def useCase(self):
         groupBoxUC = QGroupBox('Use-case')
@@ -48,7 +49,7 @@ class Window(QWidget):
         button3.clicked.connect(self.openKoshi)
 
         vboxUC = QVBoxLayout()
-        vboxUC.setAlignment(Qt.AlignTop)
+        #vboxUC.setAlignment(Qt.AlignTop)
         vboxUC.addWidget(button1)
         vboxUC.addWidget(button2)
         vboxUC.addWidget(button3)
@@ -173,7 +174,7 @@ class Window(QWidget):
     def chooseF(self):
         groupBox = QGroupBox('Выбор f')
         
-        f = QLabel('f(z,x,s,b) = ')
+        f = QLabel('f(z,x,S,b) = ')
         self.fEdit = QLineEdit()
         button = QPushButton('Сохранить')
         button.clicked.connect(self.saveF)

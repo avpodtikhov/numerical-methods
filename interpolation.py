@@ -4,9 +4,10 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
                              QMenu, QPushButton, QRadioButton, QVBoxLayout, QWidget, QFileDialog, QLabel, QLineEdit, QHBoxLayout, QDialog, QMessageBox)
 import pandas as pd
 import numpy as np
+import os
 
 class InterpolWindow(QDialog):
-    def __init__(self, parent=None, fDir = './', fName = 'f(x)'):
+    def __init__(self, parent=None, fDir = '', fName = 'f(x)'):
         super(InterpolWindow, self).__init__(parent)
         self.fDir = fDir
         self.fName = fName
@@ -25,7 +26,7 @@ class InterpolWindow(QDialog):
         grid.addWidget(self.buttonT, 3, 0)
         self.setLayout(grid)
         self.setWindowTitle("Интерполяция")
-        self.setFixedSize(300, 320)
+    #self.setFixedSize(300, 320)
     
     def showMessageBox(self, title, message):
         msg = QMessageBox(self)
@@ -90,9 +91,13 @@ class InterpolWindow(QDialog):
         groupBox = QGroupBox('Выбор директории')
         
         grid = QGridLayout()
-        num = self.fDir.rfind('/')
-        self.Dir = QLineEdit(self.fDir[:num] + '/')
-        self.Dir.setReadOnly(True)
+        if (self.fDir != ''):
+            num = self.fDir.rfind('/')
+            self.Dir = QLineEdit(self.fDir[:num] + '/')
+            self.Dir.setReadOnly(True)
+        else:
+            self.Dir = QLineEdit(os.getcwd() + '/data/')
+            self.Dir.setReadOnly(True)
         DirButton = QPushButton('...')
         DirButton.clicked.connect(self.buttonClick)
         lname = QLabel('Имя файла : ')
@@ -109,6 +114,9 @@ class InterpolWindow(QDialog):
         return groupBox
 
     def saveF(self):
+        if (len(set(self.name.text()) & set('\/:*?"<>|+')) != 0 ):
+            self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
+            return
         data = pd.DataFrame(self.cf)
         file = ''
         file = self.Dir.text() + self.name.text() + '.csv'

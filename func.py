@@ -43,7 +43,7 @@ class FuncWindow(QDialog):
         grid.addWidget(groupBox, 0, 0)
         self.setLayout(grid)
         self.setWindowTitle(self.title)
-        self.setFixedSize(self.width, self.height)
+#self.setFixedSize(self.width, self.height)
 
     def showMessageBox(self, title, message):
         msg = QMessageBox(self)

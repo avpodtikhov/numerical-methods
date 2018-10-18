@@ -5,9 +5,10 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,QMe
 import pandas as pd
 import numpy as np
 import interpolation as inter
+import os
 
 class DifEqWindow(QDialog):
-    def __init__(self, parent = None, f1Name = 'x1', f1Dir = './', f2Name = 'x2', f2Dir = './', x10 = 0, x20 = 0):
+    def __init__(self, parent = None, f1Name = 'x1', f1Dir = '', f2Name = 'x2', f2Dir = '', x10 = 0, x20 = 0):
         super(DifEqWindow, self).__init__(parent)
         self.f1Name = f1Name
         self.f1Dir = f1Dir
@@ -35,10 +36,10 @@ class DifEqWindow(QDialog):
         button2.clicked.connect(self.button2_click)
         
         f1l = QLabel(self.f1Name + '_0 = ')
-        f1le = QLineEdit(str(self.x10))
+        self.f1le = QLineEdit(str(self.x10))
         
         f2l = QLabel(self.f2Name + '_0 = ')
-        f2le = QLineEdit(str(self.x20))
+        self.f2le = QLineEdit(str(self.x20))
         
         button = QPushButton('Решить систему ОДУ')
         button.clicked.connect(self.solve)
@@ -57,26 +58,36 @@ class DifEqWindow(QDialog):
         grid2 = QGridLayout()
         grid2.setAlignment(Qt.AlignTop)
         grid2.addWidget(f1l, 0, 0)
-        grid2.addWidget(f1le, 0, 1, 1, -1)
+        grid2.addWidget(self.f1le, 0, 1, 1, -1)
         
         grid2.addWidget(f2l, 1, 0)
-        grid2.addWidget(f2le, 1, 1, 1, -1)
+        grid2.addWidget(self.f2le, 1, 1, 1, -1)
         
         groupBox2.setLayout(grid2)
             
         grid3 = QGridLayout()
         num = self.f2Dir.rfind('/')
-        self.Dir1 = QLineEdit(self.f1Dir[:num] + '/')
-        self.Dir1.setReadOnly(True)
+        
+        if (self.f1Dir != ''):
+            num = self.f1Dir.rfind('/')
+            self.Dir1 = QLineEdit(self.f1Dir[:num] + '/')
+            self.Dir1.setReadOnly(True)
+        else:
+            self.Dir1 = QLineEdit(os.getcwd() + '/data/')
+            self.Dir1.setReadOnly(True)
         DirButton1 = QPushButton('...')
         DirButton1.clicked.connect(self.buttonClick1)
         lname1 = QLabel('Имя файла : ')
         self.name1 = QLineEdit(self.f1Name)
         format1 = QLabel('.csv')
 
-        num = self.f2Dir.rfind('/')
-        self.Dir2 = QLineEdit(self.f2Dir[:num] + '/')
-        self.Dir2.setReadOnly(True)
+        if (self.f2Dir != ''):
+            num = self.f2Dir.rfind('/')
+            self.Dir2 = QLineEdit(self.f2Dir[:num] + '/')
+            self.Dir2.setReadOnly(True)
+        else:
+            self.Dir2 = QLineEdit(os.getcwd() + '/data/')
+            self.Dir2.setReadOnly(True)
         DirButton2 = QPushButton('...')
         DirButton2.clicked.connect(self.buttonClick2)
         lname2 = QLabel('Имя файла : ')
@@ -110,21 +121,27 @@ class DifEqWindow(QDialog):
         self.setLayout(vbox)
 
         self.setWindowTitle("Решение ОДУ")
-        self.setFixedSize(340, 480)
+    #self.setFixedSize(340, 480)
     
     def buttonClick1(self):
-        name = str(QFileDialog.getExistingDirectory(self))
+        name = str(QFileDialog.getExistingDirectory(self, directory = './data'))
         if name:
             self.Dir1.setText(name + '/')
             print(self.Dir1.text())
 
     def buttonClick2(self):
-        name = str(QFileDialog.getExistingDirectory(self))
+        name = str(QFileDialog.getExistingDirectory(self, directory = './data'))
         if name:
             self.Dir2.setText(name + '/')
             print(self.Dir2.text())
 
     def saveF(self):
+        if (len(set(self.name1.text()) & set('\/:*?"<>|+')) != 0 ):
+            self.showMessageBox('Ошибка', 'Недопустимые функции в названии первого файла.')
+            return
+        if (len(set(self.name2.text()) & set('\/:*?"<>|+')) != 0 ):
+            self.showMessageBox('Ошибка', 'Недопустимые функции в названии второго файла.')
+            return
         data1 = pd.DataFrame([1, 1, 1, 1])
         data2 = pd.DataFrame([2, 2, 2, 2])
         file = ''
@@ -137,12 +154,18 @@ class DifEqWindow(QDialog):
         self.showMessageBox('Успешно', 'Табулированные значения функции находятся в файле: \n' + file)
 
     def solve(self):
-        if ((self.le1.text() == './') or (self.le2.text() == './')):
-            self.showMessageBox('Ошибка', 'Не выбраны функции производных')
-            self.buttonS.setEnabled(False)
-        else:
-            self.showMessageBox('Успешно', 'Система успешно решена!')
-            self.buttonS.setEnabled(True)
+        try:
+            self.x10 = float(self.f1le.text())
+            self.x20 = float(self.f2le.text())
+            if ((self.le1.text() == './') or (self.le2.text() == './')):
+                self.showMessageBox('Ошибка', 'Не выбраны функции производных')
+                self.buttonS.setEnabled(False)
+            else:
+                self.showMessageBox('Успешно', 'Система успешно решена!')
+                self.buttonS.setEnabled(True)
+        except:
+            self.showMessageBox('Ошибка', 'Неправильный тип данных начальных условий. \n Допустимый тип:  float.')
+
     def button1_click(self):
         name = QFileDialog.getOpenFileName(self, 'Open file', './data', 'Comma-Separated Values (*.csv)')[0]
         if name:

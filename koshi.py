@@ -25,7 +25,7 @@ class KoshiWindow(QDialog):
         grid.addWidget(self.buttonSolve, 1, 0, 1, -1)
         self.setLayout(grid)
         self.setWindowTitle("Табуляция функции: ")
-        self.setFixedSize(320, 400)
+    #self.setFixedSize(320, 400)
     
     def solve(self):
         self.difeq = difeq.DifEqWindow(self, 'x', self.uDir, 'y', self.sDir, self.x0, self.y0)
@@ -100,10 +100,16 @@ class KoshiWindow(QDialog):
                 self.bmax = float(self.le8.text())
             else:
                 self.bmax = float(self.le81.text())
+            if (self.bmin > self.bmax):
+                raise RuntimeError()
             self.showMessageBox('Успешно', 'Параметры установлены')
             self.buttonSolve.setEnabled(True)
-        except:
+        except ValueError:
             self.showMessageBox('Ошибка', 'Неверные типы параметров.\n Допустимый тип: float')
+            self.buttonSolve.setEnabled(False)
+        except:
+            self.showMessageBox('Ошибка', 'Правая граница b меньше левой')
+            self.buttonSolve.setEnabled(False)
 
     def showMessageBox(self, title, message):
         msg = QMessageBox(self)

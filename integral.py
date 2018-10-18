@@ -4,9 +4,10 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,QMe
 import pandas as pd
 import numpy as np
 import interpolation as inter
+import os
 
 class IntWindow(QDialog):
-    def __init__(self, parent = None, fName = 'f(x)', fDir = './'):
+    def __init__(self, parent = None, fName = 'f(x)', fDir = ''):
         super(IntWindow, self).__init__(parent)
         self.fName = fName
         self.fDir = fDir
@@ -32,7 +33,7 @@ class IntWindow(QDialog):
 
         self.setLayout(grid)
         self.setWindowTitle("Интегрирование")
-        self.setFixedSize(300, 460)
+    #self.setFixedSize(300, 460)
     
     def interpol(self):
         self.InterpolWindow = inter.InterpolWindow(self, fDir = self.file, fName = 'U(y)')
@@ -101,7 +102,7 @@ class IntWindow(QDialog):
         self.showMessageBox('Успешно', 'Функция ' + self.fName + ' будет интегрироваться на отрезке: \n [ ' + self.fromle.text() + ', ' + self.tole.text() + ']')
     
     def pButton_click(self):
-        name = QFileDialog.getOpenFileName(self, 'Open file', filter="Comma-Separated Values (*.csv)")[0]
+        name = QFileDialog.getOpenFileName(self, 'Open file', './data',  filter="Comma-Separated Values (*.csv)")[0]
         if name:
             self.pDir.setText(name)
             self.loadButton.setEnabled(True)
@@ -117,13 +118,13 @@ class IntWindow(QDialog):
         #self.intButton.setEnabled(True)
     
     def chooseDir(self):
-        name = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        name = str(QFileDialog.getExistingDirectory(self, "Select Directory", directory = './data'))
         if name:
             self.toFile.setText(name)
             print(self.toFile.text())
 
     def buttonClick(self):
-        name = str(QFileDialog.getExistingDirectory(self))
+        name = str(QFileDialog.getExistingDirectory(self, directory = './data'))
         if name:
             self.Dir.setText(name + '/')
             print(self.Dir.text())
@@ -132,8 +133,11 @@ class IntWindow(QDialog):
         groupBox = QGroupBox('Выбор директории')
         
         grid = QGridLayout()
-        num = self.fDir.rfind('/')
-        self.Dir = QLineEdit(self.fDir[:num] + '/')
+        if (self.fDir != ''):
+            num = self.fDir.rfind('/')
+            self.Dir = QLineEdit(self.fDir[:num] + '/')
+        else:
+            self.Dir = QLineEdit(os.getcwd() + '/data/')
         self.Dir.setReadOnly(True)
         DirButton = QPushButton('...')
         DirButton.clicked.connect(self.buttonClick)
@@ -151,6 +155,9 @@ class IntWindow(QDialog):
         return groupBox
 
     def saveF(self):
+        if (len(set(self.name.text()) & set('\/:*?"<>|+')) != 0 ):
+            self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
+            return
         data = pd.DataFrame(self.grid)
         self.file = ''
         self.file = self.Dir.text() + self.name.text() + '.csv'
