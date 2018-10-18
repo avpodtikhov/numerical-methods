@@ -261,6 +261,7 @@ class Window(QWidget):
 
 if __name__ == '__main__':
     import sys
+    QApplication.setStyle("fusion") #here
     app = QApplication(sys.argv)
     ex = Window()
     ex.show()
