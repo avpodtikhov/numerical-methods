@@ -1,14 +1,16 @@
 #!/usr/local/bin/python3
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,QMenu, QPushButton, QRadioButton, QVBoxLayout, QWidget, QFileDialog, QLabel, QLineEdit, QHBoxLayout, QDialog, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,QMenu, QPushButton, QRadioButton, QVBoxLayout, QWidget, QFileDialog, QLabel, QLineEdit, QHBoxLayout, QDialog, QMessageBox, QComboBox)
 import pandas as pd
 import numpy as np
 import interpolation as inter
 import os
+from math import *
 
 class IntWindow(QDialog):
     def __init__(self, parent = None, fName = 'f(x)', fDir = ''):
         super(IntWindow, self).__init__(parent)
+        self.x = np.array([])
         self.fName = fName
         self.fDir = fDir
         grid = QGridLayout()
@@ -33,7 +35,6 @@ class IntWindow(QDialog):
 
         self.setLayout(grid)
         self.setWindowTitle("Интегрирование")
-    #self.setFixedSize(300, 460)
     
     def interpol(self):
         self.InterpolWindow = inter.InterpolWindow(self, fDir = self.file, fName = 'U(y)')
@@ -41,9 +42,26 @@ class IntWindow(QDialog):
         self.InterpolWindow.show()
         self.close()
 
+    def integrate(self):
+        ans_arr = []
+        if (type(self.lower) == str):
+            for lower in range(self.x.shape[0] - 1):
+                ans = np.float32(0.)
+                for i in range(lower, self.func.shape[0] - 1):
+                    ans += (self.x[i + 1] - self.x[i]) * (self.func[i] + self.func[i + 1]) / 2
+                ans_arr.append(ans)
+            ans_arr.append(0.)
+        else:
+            ans = np.float32(0.)
+            for i in range(self.func.shape[0] - 1):
+                ans += (self.x[i + 1] - self.x[i]) * (self.func[i] + self.func[i + 1]) / 2
+            ans_arr.append(ans)
+        return ans_arr
+    
+    
     def integral(self):
-        self.grid = self.fGrid
-        self.showMessageBox('Успешно', 'Интеграл вычислен')
+        self.i1 = self.integrate()
+        self.showMessageBox('Успешно', 'Интеграл вычислен\n' + str(self.i1))
         self.buttonT.setEnabled(True)
 
     def showMessageBox(self, title, message):
@@ -81,25 +99,49 @@ class IntWindow(QDialog):
         groupBox = QGroupBox('Границы интегрирования')
         
         froml = QLabel('От : ')
-        self.fromle = QLineEdit('0')
+        self.fromle = QComboBox(self)
+        self.fromle.addItems(['y'])
+        self.fromle.addItems(map(str, self.x))
+        #self.fromle = QLineEdit('0')
         tol = QLabel('До : ')
-        self.tole = QLineEdit('1')
-        button = QPushButton('Сохранить')
-        button.clicked.connect(self.saveBorder)
+        
+        self.tole = QComboBox(self)
+        self.tole.addItems(map(str, self.x))
+        self.buttonSave = QPushButton('Сохранить')
+        self.buttonSave.clicked.connect(self.saveBorder)
+        self.buttonSave.setEnabled(False)
         
         grid = QGridLayout()
-        
+
         grid.addWidget(froml, 0, 0)
         grid.addWidget(self.fromle, 0, 1)
         grid.addWidget(tol, 1, 0)
         grid.addWidget(self.tole, 1, 1)
-        grid.addWidget(button, 2, 0, 1, -1)
+        grid.addWidget(self.buttonSave, 2, 0, 1, -1)
         
         groupBox.setLayout(grid)
         return groupBox
     
     def saveBorder(self):
-        self.showMessageBox('Успешно', 'Функция ' + self.fName + ' будет интегрироваться на отрезке: \n [ ' + self.fromle.text() + ', ' + self.tole.text() + ']')
+        try:
+            indexFrom = self.fromle.currentIndex()
+            indexTo = self.tole.currentIndex()
+            if (indexFrom == 0):
+                self.lower = 'y'
+                self.upper = self.x[self.x.shape[0] - indexTo - 1]
+            else:
+                self.lower = self.x[indexFrom - 1]
+                self.upper = self.x[self.x.shape[0] - indexTo - 1]
+                if (self.lower > self.upper):
+                    raise RuntimeError()
+            self.showMessageBox('Успешно', 'Функция ' + self.fName + ' будет интегрироваться на отрезке: \n [ ' + str(self.lower) + ', ' + str(self.upper) + ']')
+        except RuntimeError:
+            self.showMessageBox('Ошибка', 'Правая граница больше левой.')
+            self.lower = 'y'
+            self.upper = self.x[-1]
+            self.fromle.setCurrentIndex(0)
+            self.tole.setCurrentIndex(0)
+        self.buttonT.setEnabled(False)
     
     def pButton_click(self):
         name = QFileDialog.getOpenFileName(self, 'Open file', './data',  filter="Comma-Separated Values (*.csv)")[0]
@@ -109,14 +151,23 @@ class IntWindow(QDialog):
 
     def load(self):
         data = pd.read_csv(self.pDir.text())
-        self.fGrid = np.array(data)
-        #self.w = ar[:, 0]
-        #print(ar[:, 1])
-        #self.p = ar[:, 1]
+        data = np.array(data)
+        self.x = data[:, 0]
+        print(self.x)
+        self.lower = 'y'
+        self.upper = self.x[-1]
+        self.func = data[:, 1]
+        print(self.func)
         self.showMessageBox('Успешно', 'Сетка ' + self.fName + ' загружена.')
+        for i in range(self.x.shape[0], 0, -1):
+            self.fromle.removeItem(i)
+            self.tole.removeItem(i)
+        self.tole.removeItem(0)
         self.button.setEnabled(True)
-        #self.intButton.setEnabled(True)
-    
+        self.fromle.addItems(map(str, self.x))
+        self.tole.addItems(map(str, self.x[::-1]))
+        self.buttonSave.setEnabled(True)
+
     def chooseDir(self):
         name = str(QFileDialog.getExistingDirectory(self, "Select Directory", directory = './data'))
         if name:
@@ -158,21 +209,13 @@ class IntWindow(QDialog):
         if (len(set(self.name.text()) & set('\/:*?"<>|+')) != 0 ):
             self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
             return
-        data = pd.DataFrame(self.grid)
+        if (type(self.lower) == str):
+            data = pd.DataFrame(self.i1, self.x)
+            self.button1.setEnabled(True)
+            self.showMessageBox('Успешно', 'Табулированное значение интеграла сохранено.')
+        else:
+            data = pd.DataFrame(self.i1)
+            self.showMessageBox('Успешно', 'Значение интеграла сохранено.')
         self.file = ''
         self.file = self.Dir.text() + self.name.text() + '.csv'
         data.to_csv(self.file)
-        self.showMessageBox('Успешно', 'Табулированные значения функции находятся в файле: \n' + self.file)
-        self.button1.setEnabled(True)
-    
-
-
-    '''def save(self):
-        data = pd.DataFrame([1, 1, 1, 1, 1])
-        file = ''
-        if (self.toFile.text()):
-            file = self.toFile.text() + '/U.csv'
-        else:
-            file = './U.csv'
-        data.to_csv(file)
-        self.showMessageBox('Успешно', 'Интерполяцтонные коэффиценты находятся в файле: \n' + file)'''

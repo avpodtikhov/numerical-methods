@@ -105,17 +105,17 @@ class TabWindow(QDialog):
 
     def save(self):
         try:
-            self.lower = float(self.leLower.text())
-            self.upper = float(self.leUpper.text())
+            self.lower = np.float32(self.leLower.text())
+            self.upper = np.float32(self.leUpper.text())
             if (self.lower > self.upper):
                 raise RuntimeError()
-            self.n = float(self.leH.text()) - 1
+            self.n = np.float32(self.leH.text()) - 1
             if (self.n <= 0):
                 raise NameError()
             self.showMessageBox('Успешно', 'Значения сохранены.')
             self.buttonT.setEnabled(True)
         except ValueError:
-            self.showMessageBox('Ошибка', 'Неправильный тип данных параметров. \n Допустимый тип:  float.')
+            self.showMessageBox('Ошибка', 'Неправильный тип данных параметров. \n Допустимый тип:  np.float32.')
             self.leLower.setText('')
             self.leUpper.setText('')
             self.buttonT.setEnabled(False)
