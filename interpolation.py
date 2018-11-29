@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
 import pandas as pd
 import numpy as np
 import os
+import spline
 
 class InterpolWindow(QDialog):
     def __init__(self, parent=None, fDir = '', fName = 'f(x)'):
@@ -60,8 +61,9 @@ class InterpolWindow(QDialog):
         return groupBox
     
     def interpolCef(self):
+        s = spline.Spline(self.t, self.f)
+        self.cef = s.write_cef()
         self.showMessageBox('Успешно', 'К-ты интерполяции функции ' + self.fName + '\n Вычислены')
-        self.cf = np.array([1,1,1,1])
         self.buttonT.setEnabled(True)
     #self.saveButton.setEnabled(True)
     
@@ -72,13 +74,17 @@ class InterpolWindow(QDialog):
             self.loadButton.setEnabled(True)
 
     def load(self):
-        data = pd.read_csv(self.pDir.text())
-        self.fGrid = np.array(data)
-        #self.w = ar[:, 0]
-        #print(ar[:, 1])
-        #self.p = ar[:, 1]
-        self.showMessageBox('Успешно', 'Сетка ' + self.fName + ' загружена.')
-        self.intButton.setEnabled(True)
+        try:
+            data = pd.read_csv(self.pDir.text())
+            self.t = data['t']
+            self.f = data['f']
+            print(self.t)
+            print('------')
+            print(self.f)
+            self.showMessageBox('Успешно', 'Сетка ' + self.fName + ' загружена.')
+            self.intButton.setEnabled(True)
+        except:
+            self.showMessageBox('Ошибка', 'Что-то пошло не так')
         #self.intButton.setEnabled(True)
 
     def buttonClick(self):
@@ -117,8 +123,15 @@ class InterpolWindow(QDialog):
         if (len(set(self.name.text()) & set('\/:*?"<>|+')) != 0 ):
             self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
             return
-        data = pd.DataFrame(self.cf)
+        print(self.cef[0])
+        print(self.cef[1])
+        print(self.cef[2])
+        print(self.cef[3])
+        cefb = np.append(self.cef[3], np.zeros(1))
+        cefa = np.append(self.cef[2], np.zeros(1))
+        data = {'t':self.cef[0], 'm':self.cef[1], 'a':cefa, 'b':cefb}
+        df = pd.DataFrame(data=data)
         file = ''
         file = self.Dir.text() + self.name.text() + '.csv'
-        data.to_csv(file)
+        df.to_csv(file)
         self.showMessageBox('Успешно', 'Табулированные значения функции находятся в файле: \n' + file)

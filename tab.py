@@ -137,28 +137,29 @@ class TabWindow(QDialog):
         h = (self.upper - self.lower) / self.n
         print(h)
         if (self.funcName == 'p(w)'):
-            t_arr = np.arange(self.lower, self.upper + h, h)
+            t_arr = np.arange(self.lower, self.upper + h/2, h)
             function = np.empty_like(t_arr)
             print(function.shape)
             for i in range(function.shape[0]):
                 w = t_arr[i]
                 function[i] = eval(self.func)
         if (self.funcName == 'f(x)'):
-            t_arr = np.arange(self.lower, self.upper + h, h)
+            t_arr = np.arange(self.lower, self.upper + h/2, h)
             function = np.empty_like(t_arr)
             print(function.shape)
             for i in range(function.shape[0]):
                 x = t_arr[i]
                 function[i] = eval(self.func)
         else:
-            t_arr = np.arange(self.lower, self.upper + h, h)
+            t_arr = np.arange(self.lower, self.upper + h/2, h)
             function = np.empty_like(t_arr)
             print(function.shape)
             for i in range(function.shape[0]):
                 t = t_arr[i]
                 function[i] = eval(self.func)
-        data = pd.DataFrame(function, t_arr)
+        data = {'t':t_arr, 'f':function}
+        df = pd.DataFrame(data=data)
         file = ''
         file = self.Dir.text() + self.name.text() + '.csv'
-        data.to_csv(file)
+        df.to_csv(file)
         self.showMessageBox('Успешно', 'Табулированные значения функции находятся в файле: \n' + file)

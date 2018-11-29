@@ -58,14 +58,14 @@ class Window(QWidget):
         groupBoxM = QGroupBox('Модули')
 
         button4 = QPushButton('Задание функций')
-        button5 = QPushButton('Интерполяция')
-        button6 = QPushButton('Интегрирование')
+        button5 = QPushButton('Интегрирование')
+        button6 = QPushButton('Интерполяция')
         button7 = QPushButton('Решение ОДУ')
         button8 = QPushButton('Графики')
 
         button4.clicked.connect(self.openFunc)
-        button5.clicked.connect(self.openInterpolation)
-        button6.clicked.connect(self.openInt)
+        button5.clicked.connect(self.openInt)
+        button6.clicked.connect(self.openInterpolation)
         button7.clicked.connect(self.openDE)
         button8.clicked.connect(self.openGraph)
 

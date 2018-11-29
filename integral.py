@@ -151,12 +151,12 @@ class IntWindow(QDialog):
 
     def load(self):
         data = pd.read_csv(self.pDir.text())
-        data = np.array(data)
-        self.x = data[:, 0]
+        #data = np.array(data)
+        self.x = np.array(data['t'])
         print(self.x)
         self.lower = 'y'
         self.upper = self.x[-1]
-        self.func = data[:, 1]
+        self.func = np.array(data['f'])
         print(self.func)
         self.showMessageBox('Успешно', 'Сетка ' + self.fName + ' загружена.')
         for i in range(self.x.shape[0], 0, -1):
@@ -210,12 +210,14 @@ class IntWindow(QDialog):
             self.showMessageBox('Ошибка', 'Недопустимые функции в названии файла.')
             return
         if (type(self.lower) == str):
-            data = pd.DataFrame(self.i1, self.x)
+            data = {'f':self.i1, 't':self.x}
+            df = pd.DataFrame(data=data)
             self.button1.setEnabled(True)
             self.showMessageBox('Успешно', 'Табулированное значение интеграла сохранено.')
         else:
-            data = pd.DataFrame(self.i1)
+            data = {'f':self.i1}
+            df = pd.DataFrame(data=data)
             self.showMessageBox('Успешно', 'Значение интеграла сохранено.')
         self.file = ''
         self.file = self.Dir.text() + self.name.text() + '.csv'
-        data.to_csv(self.file)
+        df.to_csv(self.file)
